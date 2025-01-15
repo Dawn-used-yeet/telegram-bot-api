@@ -1,0 +1,37 @@
+name: Publish package
+
+on: workflow_dispatch
+
+jobs:
+  telegram-bot-api:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Install Dependencies (updates only if needed)
+    - name: Install Dependencies
+      run: sudo apt update && sudo apt-get install -y zip libssl-dev zlib1g-dev g++ gperf cmake
+
+
+    - name: Clone repo, Configure and build
+      run: |
+        git clone --recursive https://github.com/tdlib/telegram-bot-api.git
+        cd telegram-bot-api
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=Release ..
+        cmake --build .
+        zip telegram-bot-api.zip telegram-bot-api
+
+    - name: Automatic Release
+      uses: marvinpinto/action-automatic-releases@latest
+      with: 
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "latest"
+        prerelease: false
+        title: "Latest Build"
+        files: |
+          telegram-bot-api/build/telegram-bot-api
+          telegram-bot-api/build/telegram-bot-api.zip
